@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>IRAF Unit Lookup</title>
+</head>
+
+<body>
+    <h1>IRAF Unit Lookup</h1>
+    <style>
+        canvas {
+            float: right;
+        }
+
+        body,
+        #chartContainer {
+            overflow: visible !important;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            overflow: auto;
+        }
+    </style>
+
+    <canvas id="divisionChart" width="200px" height="400px"></canvas>
+    <canvas id="battalionChart" width="200px" height="400px"></canvas>
+    <canvas id="brigadeChart" width="200px" height="400px"></canvas>
+    <canvas id="companyChart" width="200px" height="400px"></canvas>
+    <canvas id="platoonChart" width="200px" height="400px"></canvas>
+    <canvas id="squadChart" width="200px" height="400px"></canvas>
+
+    <label for="unitType">Select Unit Type:</label>
+    <select id="unitType">
+        <option value="Division">Division</option>
+        <option value="Brigade">Brigade</option>
+        <option value="Battalion">Battalion</option>
+        <option value="Company">Company</option>
+        <option value="Platoon">Platoon</option>
+        <option value="Squad">Squad</option>
+    </select>
+
+    <label for="unitNumber">Enter Unit Number:</label>
+    <input type="number" id="unitNumber" min="1" value="1" />
+    <button onclick="lookupUnit()">Lookup</button>
+
+    <div id="result" style="margin-top:20px;"></div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
