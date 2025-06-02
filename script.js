@@ -119,7 +119,7 @@ function buildChart(canvasId, structureArray, totalUnits, unitLabel) {
                             return `${addNumberEnding(start)} – ${addNumberEnding(end)}: ${type} ${unitLabel}s`;
                         }
                     },
-                    bodyFont: { size: 14 },
+                    bodyFont: { size: 10 },
                     padding: 10,
                     displayColors: false,
                     caretSize: 6,
