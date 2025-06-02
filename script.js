@@ -218,6 +218,11 @@ function lookupUnit() {
     const type = unitTypeSelect.value;
     const num = parseInt(unitNumberInput.value);
 
+    const url = new URL(window.location.href);
+    url.hash = `${type}:${num}`;
+    window.history.replaceState({}, '', url.toString());
+
+    
     if (num < 1 || num > totalCounts[type]) {
         resultDiv.innerText = "Invalid number for selected unit type.";
         return;
@@ -260,4 +265,16 @@ function lookupUnit() {
 
 }
 
-
+window.addEventListener("load", () => {
+    const url = new URL(window.location.href);
+    const hashParams = url.hash.slice(1).split(":");
+    if (hashParams.length === 2) {
+        const type = hashParams[0];
+        const num = parseInt(hashParams[1]);
+        if (type in structureMap && !isNaN(num)) {
+            unitTypeSelect.value = type;
+            unitNumberInput.value = num;
+            lookupUnit();
+        }
+    }
+});
