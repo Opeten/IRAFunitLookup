@@ -150,128 +150,68 @@ buildChart("squadChart", squads, totalCounts["Squad"], "Squad");
 function getHierarchy(unitType, number) {
     const hierarchy = {};
 
-    const subPerUnit = {
-        Division: { sub: 4, next: "Brigade", altSub: 3 },
-        Brigade: { sub: 4, next: "Battalion" },
-        Battalion: { sub: 4, next: "Company" },
-        Company: { sub: 4, next: "Platoon" },
-        Platoon: { sub: 4, next: "Squad" },
-        Squad: { sub: 1, next: null }
-    };
-
+    const structureOrder = ["Division", "Brigade", "Battalion", "Company", "Platoon", "Squad"];
     const soldiersPerSquad = 11;
 
-    const getDivisionInfo = (unitType, number) => {
+    // Helper to get division info
+    const getDivisionInfo = (number) => {
         let divs = structureMap["Division"];
-        let cumulative = 0, index = number;
+        let index = number;
         for (let div of divs) {
-            let divSize = div.count;
-            if (index <= divSize) {
+            if (index <= div.count) {
                 return {
                     divisionNumber: index,
                     divisionType: div.type
                 };
             }
-            index -= divSize;
+            index -= div.count;
         }
         return null;
     };
 
-    // Calculate Division & Brigade ownership
+    // Handle Division separately
     if (unitType === "Division") {
-        const divInfo = getDivisionInfo("Division", number);
+        const divInfo = getDivisionInfo(number);
+        const isInfantry = divInfo?.divisionType === "Infantry";
+        const brigades = isInfantry ? 4 : 3;
+
         hierarchy.division = `${addNumberEnding(number)} ${divInfo.divisionType} Division`;
-        hierarchy.bridgesInDiv = divInfo.divisionType === "Infantry" ? 4 : 3;
-        hierarchy.totalPersonnel = 12000;
         hierarchy.subCounts = {
-            Brigades: hierarchy.bridgesInDiv,
-            Battalions: hierarchy.bridgesInDiv * 4,
-            Companies: hierarchy.bridgesInDiv * 4 * 4,
-            Platoons: hierarchy.bridgesInDiv * 4 * 4 * 4,
-            Squads: hierarchy.bridgesInDiv * 4 * 4 * 4 * 4
+            Brigade: brigades,
+            Battalion: brigades * 4,
+            Company: brigades * 4 * 4,
+            Platoon: brigades * 4 * 4 * 4,
+            Squad: brigades * 4 * 4 * 4 * 4
         };
-    } else {
-        // Traverse up the chain
-        const chain = ["Squad", "Platoon", "Company", "Battalion", "Brigade", "Division"];
-        const currentIndex = chain.indexOf(unitType);
-        let currentNumber = number;
-
-        for (let i = currentIndex; i < chain.length - 1; i++) {
-            const parent = chain[i + 1];
-            const perUnit = (parent === "Division")
-                ? structureMap[parent].reduce((acc, div) => acc + div.count, 0)
-                : totalCounts[parent];
-
-            const childPerParent = (structureMap[parent][0].type === "Infantry" && parent === "Brigade") ? 4 : 3;
-            const parentNumber = Math.ceil(currentNumber / Math.pow(4, i - currentIndex + 1));
-            hierarchy[parent.toLowerCase()] = addNumberEnding(parentNumber) + " " + parent;
-        }
-
-        // Estimate size
-        const subUnits = {};
-        let subs = 1;
-        let personnel = 1;
-
-        if (unitType === "Division") {
-            subs = 4;
-            personnel = 12000;
-        } else if (unitType === "Brigade") {
-            subs = 4;
-            personnel = 3000;
-        } else if (unitType === "Battalion") {
-            subs = 4;
-            personnel = 800;
-        } else if (unitType === "Company") {
-            subs = 4;
-            personnel = 200;
-        } else if (unitType === "Platoon") {
-            subs = 4;
-            personnel = 40;
-        } else if (unitType === "Squad") {
-            subs = 1;
-            personnel = 11;
-        }
-
-        let c = {
-            Company: 0,
-            Platoon: 0,
-            Squad: 0
-        };
-
-        switch (unitType) {
-            case "Division":
-                c.Brigade = (structureMap["Brigade"][0].type === "Infantry") ? 4 : 3;
-                c.Battalion = c.Brigade * 4;
-                c.Company = c.Battalion * 4;
-                c.Platoon = c.Company * 4;
-                c.Squad = c.Platoon * 4;
-                break;
-            case "Brigade":
-                c.Battalion = 4;
-                c.Company = 16;
-                c.Platoon = 64;
-                c.Squad = 256;
-                break;
-            case "Battalion":
-                c.Company = 4;
-                c.Platoon = 16;
-                c.Squad = 64;
-                break;
-            case "Company":
-                c.Platoon = 4;
-                c.Squad = 16;
-                break;
-            case "Platoon":
-                c.Squad = 4;
-                break;
-        }
-
-        c.Personnel = personnel;
-        hierarchy.subCounts = c;
+        hierarchy.totalPersonnel = hierarchy.subCounts.Squad * soldiersPerSquad;
+        return hierarchy;
     }
+
+    // Otherwise: go up the hierarchy only
+    const currentIndex = structureOrder.indexOf(unitType);
+    let tempNumber = number;
+
+    for (let i = currentIndex - 1; i >= 0; i--) {
+        const parentType = structureOrder[i];
+        tempNumber = Math.ceil(tempNumber / 4);
+        hierarchy[parentType.toLowerCase()] = `${addNumberEnding(tempNumber)} ${parentType}`;
+    }
+
+    // Compute subunit counts below
+    const subCounts = {};
+    let count = 1;
+    for (let i = currentIndex + 1; i < structureOrder.length; i++) {
+        const subType = structureOrder[i];
+        count *= 4;
+        subCounts[subType] = count;
+    }
+
+    hierarchy.subCounts = subCounts;
+    hierarchy.totalPersonnel = (subCounts["Squad"] || 1) * soldiersPerSquad;
 
     return hierarchy;
 }
+
 
 
 function lookupUnit() {
@@ -305,11 +245,11 @@ function lookupUnit() {
 
     output += `<br/><br/><strong>Hierarchy:</strong><br/>`;
 
-    if (hierarchy.division) output += `Division: ${hierarchy.division}<br/>`;
-    if (hierarchy.brigade) output += `Brigade: ${hierarchy.brigade}<br/>`;
-    if (hierarchy.battalion) output += `Battalion: ${hierarchy.battalion}<br/>`;
-    if (hierarchy.company) output += `Company: ${hierarchy.company}<br/>`;
-    if (hierarchy.platoon) output += `Platoon: ${hierarchy.platoon}<br/>`;
+    if (hierarchy.division) output += `Divisions: ${hierarchy.division}<br/>`;
+    if (hierarchy.brigade) output += `Brigades: ${hierarchy.brigade}<br/>`;
+    if (hierarchy.battalion) output += `Battalions: ${hierarchy.battalion}<br/>`;
+    if (hierarchy.company) output += `Companies: ${hierarchy.company}<br/>`;
+    if (hierarchy.platoon) output += `Platoons: ${hierarchy.platoon}<br/>`;
 
     output += `<br/><strong>Subunit Estimates:</strong><br/>`;
     for (let [key, val] of Object.entries(hierarchy.subCounts)) {
@@ -319,3 +259,5 @@ function lookupUnit() {
     resultDiv.innerHTML = output;
 
 }
+
+
