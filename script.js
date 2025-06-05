@@ -8,6 +8,52 @@ const divisions = [
     { type: "Misc./Training", count: 3 }
 ];
 
+let exceptions;
+
+async function loadExceptions() {
+    try {
+        const response = await fetch('./exceptions.json');
+        exceptions = await response.json();
+        // Now you can use the exceptions variable
+        // console.log(exceptions);
+    } catch (error) {
+        console.error('Error loading JSON:', error);
+    }
+}
+
+await loadExceptions();
+
+
+async function lookupException(unitType, number) {
+    // console.log(await exceptions)
+    // console.log(exceptions[unitType.toLowerCase() + number]);
+    const exception = exceptions[unitType.toLowerCase() + number];
+    if (exception) {
+        return {
+            unitType: exception.type,
+            number: exception.number,
+            name: exception.name
+        };
+    }
+    return null;
+}
+// console.log(await lookupException("brigade", "852"));
+// console.log(await lookupException("brigade", "852"))
+async function unitExceptionCheck(unit) {
+    console.log(unit.split(":")[1]);
+    const unitType = (unit.split(":")[0]).toLowerCase();
+    const number = unit.split(":")[1];
+    console.log(unitType, number);
+    if (await lookupException(unitType, number) === null) {
+        return { unitType: unitType, number: number, changed: false };
+
+    } else if (await lookupException(unitType, number) !== null) {
+        const Exception = await lookupException(unitType, number);
+        return { unitType: Exception.unitType, number: Exception.number, name: Exception.name, changed: true };
+
+    }
+}
+
 // Match brigade counts to division structure
 const brigades = divisions.map(div => ({
     type: div.type,
@@ -214,7 +260,7 @@ function getHierarchy(unitType, number) {
 
 
 
-function lookupUnit() {
+window.lookupUnit = async function () {
     const type = unitTypeSelect.value;
     const num = parseInt(unitNumberInput.value);
 
@@ -222,7 +268,7 @@ function lookupUnit() {
     url.hash = `${type}:${num}`;
     window.history.replaceState({}, '', url.toString());
 
-    
+
     if (num < 1 || num > totalCounts[type]) {
         resultDiv.innerText = "Invalid number for selected unit type.";
         return;
@@ -242,8 +288,19 @@ function lookupUnit() {
             localNum -= group.count;
         }
     }
-
-    let output = `${addNumberEnding(num)} ${type} — ${addNumberEnding(localNum)} ${unitType} ${type}`;
+    let output = "";
+    let useSimple = false;
+    console.log((await unitExceptionCheck(type.toLowerCase() + ":" + num)).changed);
+    if ((await unitExceptionCheck(type.toLowerCase() + ":" + num)).changed) {
+        console.log((await unitExceptionCheck(type.toLowerCase() + ":" + num)).name);
+        unitType = (await unitExceptionCheck(type.toLowerCase() + ":" + num)).name
+        useSimple = true
+    };
+    if (useSimple) {
+        output = `${addNumberEnding(num)} ${type} — ${unitType}`;
+    } else {
+        output = `${addNumberEnding(num)} ${type} — ${addNumberEnding(localNum)} ${unitType} ${type}`;
+    }
     // let output = `${addNumberEnding(num)} ${type}`;
 
     const hierarchy = getHierarchy(type, num);
@@ -265,16 +322,16 @@ function lookupUnit() {
 
 }
 
-window.addEventListener("load", () => {
-    const url = new URL(window.location.href);
-    const hashParams = url.hash.slice(1).split(":");
-    if (hashParams.length === 2) {
-        const type = hashParams[0];
-        const num = parseInt(hashParams[1]);
-        if (type in structureMap && !isNaN(num)) {
-            unitTypeSelect.value = type;
-            unitNumberInput.value = num;
-            lookupUnit();
-        }
+// window.addEventListener("load", () => {
+const url = new URL(window.location.href);
+const hashParams = url.hash.slice(1).split(":");
+if (hashParams.length === 2) {
+    const type = hashParams[0];
+    const num = parseInt(hashParams[1]);
+    if (type in structureMap && !isNaN(num)) {
+        unitTypeSelect.value = type;
+        unitNumberInput.value = num;
+        lookupUnit();
     }
-});
+}
+// });

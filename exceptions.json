@@ -1,0 +1,12 @@
+{
+    "brigade512": {
+        "type": "Brigade",
+        "number": 512,
+        "name": "512th Infantry Brigade, 1st Echo Force Brigade"
+    },
+    "brigade852": {
+        "type": "Brigade",
+        "number": 852,
+        "name": "852nd Infantry Brigade, 2nd Echo Force Brigade"
+    }
+}
