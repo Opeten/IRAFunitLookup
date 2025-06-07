@@ -306,12 +306,11 @@ window.lookupUnit = async function () {
     const hierarchy = getHierarchy(type, num);
 
     output += `<br/><br/><strong>Hierarchy:</strong><br/>`;
-
-    if (hierarchy.division) output += `Divisions: ${hierarchy.division}<br/>`;
-    if (hierarchy.brigade) output += `Brigades: ${hierarchy.brigade}<br/>`;
-    if (hierarchy.battalion) output += `Battalions: ${hierarchy.battalion}<br/>`;
-    if (hierarchy.company) output += `Companies: ${hierarchy.company}<br/>`;
-    if (hierarchy.platoon) output += `Platoons: ${hierarchy.platoon}<br/>`;
+    if (hierarchy.division) output += `${hierarchy.division} | ${addNumberEnding(localNum)} ${unitType} Division | Division: ${hierarchy.division}<br/>`;
+    if (hierarchy.brigade) output += `${addNumberEnding(num)} Brigade | Local: ${addNumberEnding(localNum)} | Brigade: ${hierarchy.brigade}<br/>`;
+    if (hierarchy.battalion) output += `${addNumberEnding(num)} Battalion | Local: ${addNumberEnding(localNum)} | Battalion: ${hierarchy.battalion}<br/>`;
+    if (hierarchy.company) output += `${addNumberEnding(num)} Company | Local: ${addNumberEnding(localNum)} | Company: ${hierarchy.company}<br/>`;
+    if (hierarchy.platoon) output += `${addNumberEnding(num)} Platoon | Local: ${addNumberEnding(localNum)} | Platoon: ${hierarchy.platoon}<br/>`;
 
     output += `<br/><strong>Subunit Estimates:</strong><br/>`;
     for (let [key, val] of Object.entries(hierarchy.subCounts)) {

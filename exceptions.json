@@ -8,5 +8,10 @@
         "type": "Brigade",
         "number": 852,
         "name": "852nd Infantry Brigade, 2nd Echo Force Brigade"
+    },
+    "division2408": {
+        "type": "Division",
+        "number": 2408,
+        "name": "385th Exoskelaton Marine (IRMC) Division"
     }
 }
